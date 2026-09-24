@@ -1,4 +1,4 @@
-# Compilers – HW2 (MiniJava Static Analyzer)
+# MiniJava Static Analyzer (Compilers–HW2)
 
 A MiniJava static analyzer built at NKUA. The project parses MiniJava source
 files, builds a symbol table, performs type checking, and computes the memory
