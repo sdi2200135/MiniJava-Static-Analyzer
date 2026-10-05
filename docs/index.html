@@ -1,0 +1,1605 @@
+<!-- site for the explanation of the project -->
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniJava Static Analyzer</title>
+<style>
+:root {
+  --bg: #08080f;
+  --bg-card: #11111f;
+  --bg-soft: #1e1e35;
+  --text: #e0e7ff;
+  --text-muted: #8a90b8;
+  --accent: #6366f1;
+  --accent-2: #818cf8;
+  --accent-3: #10b981;
+  --success: #34d399;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+  --st: #22d3ee;
+  --tc: #a78bfa;
+  --off: #fb923c;
+  --border: #232345;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* CODE RAIN BACKGROUND */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(99,102,241,0.08), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(16,185,129,0.06), transparent 40%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+nav {
+  background: rgba(8, 8, 15, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0 1.5rem;
+}
+
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.logo::before { content: "⚙️"; font-size: 1.2rem; }
+
+.nav-links {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.nav-links a:hover { color: var(--text); background: var(--bg-soft); }
+.nav-links a.active { color: var(--bg); background: var(--accent); }
+.nav-links a.warn-link { color: var(--warn); }
+.nav-links a.warn-link.active { background: var(--warn); color: var(--bg); }
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.page { display: none; animation: fadeIn 0.4s ease; }
+.page.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero {
+  text-align: center;
+  padding: 2rem 0 3rem;
+}
+
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  color: var(--text-muted);
+  max-width: 760px;
+  margin: 0 auto 1.5rem;
+  font-size: 1.05rem;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.badge.java { color: #f87171; border-color: #f87171; }
+.badge.jtb { color: #22d3ee; border-color: #22d3ee; }
+.badge.javacc { color: #a78bfa; border-color: #a78bfa; }
+.badge.visitor { color: #34d399; border-color: #34d399; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: all 0.25s;
+}
+
+.card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.card h3 { font-size: 1.1rem; margin-bottom: 0.6rem; color: var(--text); }
+.card p { color: var(--text-muted); font-size: 0.92rem; }
+
+.comp-card { cursor: pointer; position: relative; overflow: hidden; }
+.comp-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+}
+.comp-card.st::before { background: var(--st); }
+.comp-card.tc::before { background: var(--tc); }
+.comp-card.off::before { background: var(--off); }
+
+.comp-card h3 { display: flex; align-items: center; gap: 0.5rem; }
+.comp-card .tag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.tag.st { background: rgba(34,211,238,0.15); color: var(--st); }
+.tag.tc { background: rgba(167,139,250,0.15); color: var(--tc); }
+.tag.off { background: rgba(251,146,60,0.15); color: var(--off); }
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+}
+
+.section h2 .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--bg);
+  flex-shrink: 0;
+}
+
+.section h3 {
+  font-size: 1rem;
+  margin: 1.2rem 0 0.6rem;
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+.comp-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.comp-header .icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.comp-header.st .icon { background: rgba(34,211,238,0.15); color: var(--st); }
+.comp-header.tc .icon { background: rgba(167,139,250,0.15); color: var(--tc); }
+.comp-header.off .icon { background: rgba(251,146,60,0.15); color: var(--off); }
+.comp-header.limit .icon { background: rgba(251,191,36,0.15); color: var(--warn); }
+
+.comp-header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+.comp-header p { color: var(--text-muted); font-size: 0.95rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+th, td {
+  padding: 0.7rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: var(--bg-soft);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(99, 102, 241, 0.04); }
+
+td code, p code, li code, .step code {
+  background: var(--bg-soft);
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 0.85em;
+  color: var(--accent-2);
+  border: 1px solid var(--border);
+}
+
+.step-list {
+  list-style: none;
+  counter-reset: step;
+  padding-left: 0;
+}
+
+.step-list li {
+  counter-increment: step;
+  position: relative;
+  padding: 0.8rem 0 0.8rem 3rem;
+  border-left: 2px solid var(--border);
+  margin-left: 1rem;
+}
+
+.step-list li::before {
+  content: counter(step);
+  position: absolute;
+  left: -1.05rem;
+  top: 0.8rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 3px solid var(--bg-card);
+}
+
+.step-list li:last-child { border-left-color: transparent; }
+.step-list li strong { color: var(--text); }
+.step-list li span { color: var(--text-muted); font-size: 0.92rem; display: block; margin-top: 0.15rem; }
+
+pre {
+  background: #04040a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #c8cce0;
+  margin: 0.75rem 0;
+}
+
+pre .kw { color: #f472b6; }
+pre .cm { color: #5a5e7a; font-style: italic; }
+pre .str { color: #86efac; }
+pre .num { color: #fbbf24; }
+pre .fn { color: #22d3ee; }
+pre .type { color: #a78bfa; }
+
+.result-box {
+  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(16,185,129,0.08));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 0.75rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.alert {
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+  border-left: 4px solid;
+  font-size: 0.92rem;
+}
+
+.alert.info { background: rgba(96,165,250,0.08); border-color: var(--info); }
+.alert.success { background: rgba(52,211,153,0.08); border-color: var(--success); }
+.alert.warn { background: rgba(251,191,36,0.08); border-color: var(--warn); }
+.alert.danger { background: rgba(248,113,113,0.08); border-color: var(--danger); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.stat {
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat .value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  display: block;
+  line-height: 1.2;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat .name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Pipeline Diagram */
+.pipeline-diagram {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+  background: #04040a;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pipe-node {
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  border: 2px solid;
+  min-width: 140px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+}
+
+.pipe-node .pipe-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.pipe-node .pipe-sub {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.pipe-node.source {
+  border-color: var(--text-muted);
+  background: rgba(138,144,184,0.05);
+  color: var(--text-muted);
+}
+
+.pipe-node.jtb {
+  border-color: var(--accent-3);
+  background: rgba(16,185,129,0.05);
+  color: var(--accent-3);
+}
+
+.pipe-node.st {
+  border-color: var(--st);
+  background: rgba(34,211,238,0.05);
+  color: var(--st);
+}
+
+.pipe-node.tc {
+  border-color: var(--tc);
+  background: rgba(167,139,250,0.05);
+  color: var(--tc);
+}
+
+.pipe-node.off {
+  border-color: var(--off);
+  background: rgba(251,146,60,0.05);
+  color: var(--off);
+}
+
+.pipe-arrow {
+  font-size: 1.5rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Struct box */
+.struct-box {
+  background: #04040a;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.struct-box .struct-header {
+  background: var(--bg-soft);
+  padding: 0.6rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.struct-box .struct-header.st { color: var(--st); border-bottom-color: var(--st); }
+.struct-box .struct-header.tc { color: var(--tc); border-bottom-color: var(--tc); }
+.struct-box .struct-header.off { color: var(--off); border-bottom-color: var(--off); }
+
+.struct-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.struct-field:last-child { border-bottom: none; }
+.struct-field .field-name { color: var(--accent-2); }
+.struct-field .field-type { color: var(--text-muted); font-size: 0.75rem; }
+.struct-field .field-desc { color: var(--text-muted); font-size: 0.78rem; font-style: italic; }
+
+/* Limitation items */
+.limitation {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-soft);
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--danger);
+}
+
+.limitation .icon-box {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: rgba(248,113,113,0.15);
+  color: var(--danger);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.limitation .content { flex: 1; }
+.limitation .content strong { color: var(--text); display: block; margin-bottom: 0.2rem; font-size: 0.95rem; }
+.limitation .content span { color: var(--text-muted); font-size: 0.88rem; }
+
+.limitation.warn { border-left-color: var(--warn); }
+.limitation.warn .icon-box { background: rgba(251,191,36,0.15); color: var(--warn); }
+.limitation.info { border-left-color: var(--info); }
+.limitation.info .icon-box { background: rgba(96,165,250,0.15); color: var(--info); }
+
+/* Type check table */
+.check-table td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--accent-2); }
+.check-table td:last-child { color: var(--text-muted); font-size: 0.88rem; }
+
+/* Memory layout visual */
+.mem-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 1rem 0;
+}
+
+.mem-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.mem-row .offset {
+  min-width: 40px;
+  color: var(--off);
+  font-weight: 700;
+}
+
+.mem-row .size {
+  min-width: 60px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.mem-row .name { color: var(--accent-2); }
+.mem-row .type { color: var(--text-muted); font-size: 0.75rem; }
+
+.mem-row.header {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+footer {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+}
+
+@media (max-width: 640px) {
+  .nav-inner { height: auto; padding: 0.75rem 0; }
+  .nav-links { width: 100%; justify-content: center; }
+  .nav-links a { padding: 0.4rem 0.7rem; font-size: 0.82rem; }
+  .section { padding: 1.25rem; }
+  .comp-header h1 { font-size: 1.3rem; }
+  .pipeline-diagram { flex-direction: column; }
+  .pipe-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo" onclick="go('home')">MiniJava Analyzer</div>
+    <ul class="nav-links">
+      <li><a data-page="home" onclick="go('home')">Αρχική</a></li>
+      <li><a data-page="pipeline" onclick="go('pipeline')">Pipeline</a></li>
+      <li><a data-page="st" onclick="go('st')">Symbol Table</a></li>
+      <li><a data-page="tc" onclick="go('tc')">Type Checking</a></li>
+      <li><a data-page="offset" onclick="go('offset')">Offsets</a></li>
+      <li><a data-page="limitations" class="warn-link" onclick="go('limitations')">⚠️ Περιορισμοί</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+
+<!-- ==================== HOME ==================== -->
+<section class="page active" id="home">
+  <div class="hero">
+    <h1>MiniJava Static Analyzer</h1>
+    <p>
+      Ένας <strong>static analyzer</strong> για τη MiniJava, υλοποιημένος σε 
+      <strong>Java</strong> με <strong>JTB</strong> και <strong>JavaCC</strong>. 
+      Αποτελεί το <em>front-end</em> ενός MiniJava compiler: symbol table, 
+      type checking και memory layout computation.
+    </p>
+    <div class="badges">
+      <span class="badge java">Java</span>
+      <span class="badge jtb">JTB</span>
+      <span class="badge javacc">JavaCC</span>
+      <span class="badge visitor">Visitor Pattern</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📖 Σχετικά με την Εργασία</h2>
+    <p>
+      Η παρούσα εργασία αποτελεί τη <strong>2η Προγραμματιστική Εργασία</strong> 
+      του μαθήματος <em>«Μεταγλωττιστές»</em>. Υλοποιεί έναν 
+      <strong>στατικό αναλυτή</strong> (static analyzer) για τη γλώσσα MiniJava, 
+      που εκτελεί τρεις βασικές αναλύσεις:
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>1️⃣ Symbol Table</h3>
+        <p>Καταγραφή όλων των κλάσεων, πεδίων, μεθόδων, παραμέτρων και 
+        τοπικών μεταβλητών σε ένα hash map.</p>
+      </div>
+      <div class="card">
+        <h3>2️⃣ Type Checking</h3>
+        <p>Έλεγχος ορθότητας τύπων σε expressions, statements, method calls 
+        και inheritance.</p>
+      </div>
+      <div class="card">
+        <h3>3️⃣ Offset Calculation</h3>
+        <p>Υπολογισμός του memory layout κάθε κλάσης — offsets πεδίων και 
+        μεθόδων στη μνήμη.</p>
+      </div>
+    </div>
+
+    <div class="alert warn">
+      <strong>⚠️ Σημείωση:</strong> Υλοποιείται <strong>μόνο το front-end</strong> 
+      του compiler. Το <em>code generation</em> (Vapor / SPIGLET / bytecode) 
+      <strong>δεν</strong> έχει υλοποιηθεί. Δείτε τη σελίδα 
+      <a onclick="go('limitations')" style="color:var(--warn); cursor:pointer; text-decoration:underline;">
+      Περιορισμοί</a>.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🔀 Pipeline</h2>
+    <p style="color:var(--text-muted); margin-bottom:1rem;">
+      Ο analyzer αποτελείται από <strong>τρία ανεξάρτητα passes</strong>, 
+      κάθε ένα από τα οποία διατρέχει το AST με visitor.
+    </p>
+
+    <div class="pipeline-diagram">
+      <div class="pipe-node source">
+        <div class="pipe-title">MiniJava</div>
+        <div class="pipe-sub">.java source</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node jtb">
+        <div class="pipe-title">JTB + JavaCC</div>
+        <div class="pipe-sub">Parse tree</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node st">
+        <div class="pipe-title">MyVisitor_ST</div>
+        <div class="pipe-sub">Pass 1 · Symbol Table</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node tc">
+        <div class="pipe-title">MyVisitor_TC</div>
+        <div class="pipe-sub">Pass 2 · Type Check</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node off">
+        <div class="pipe-title">MyVisitor_OffSet</div>
+        <div class="pipe-sub">Pass 3 · Memory Layout</div>
+      </div>
+    </div>
+
+    <div class="alert info">
+      <strong>Shared state:</strong> Και τα τρία passes μοιράζονται το ίδιο 
+      <code>SymbolTable</code> και το ίδιο AST root (<code>Goal</code>). Κάθε 
+      pass διατρέχει το δέντρο ανεξάρτητα.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🛠️ Τεχνολογίες</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>JTB 1.3.2</h3>
+        <p>Java Tree Builder — παράγει τα <code>syntaxtree/</code> και 
+        <code>visitor/</code> directories από το grammar.</p>
+      </div>
+      <div class="card">
+        <h3>JavaCC 5.0</h3>
+        <p>Παράγει τον parser από το <code>.jj</code> grammar. Χρήση flag 
+        <code>-te</code> για minimal AST.</p>
+      </div>
+      <div class="card">
+        <h3>Visitor Pattern</h3>
+        <p>Χρήση του <code>GJDepthFirst&lt;R, A&gt;</code> για traversal του 
+        AST. Ένα visitor ανά pass.</p>
+      </div>
+      <div class="card">
+        <h3>LinkedHashMap</h3>
+        <p>Διατήρηση της <strong>σειράς δήλωσης</strong> — κρίσιμο για τον 
+        υπολογισμό των offsets.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📂 Δομή Project</h2>
+    <pre>.
+├── Makefile
+├── README.md
+├── Main.java                 <span class="cm">// driver</span>
+├── MiniJava.jj               <span class="cm">// grammar</span>
+├── MyVisitor_ST.java         <span class="cm">// pass 1</span>
+├── MyVisitor_TC.java         <span class="cm">// pass 2</span>
+├── MyVisitor_OffSet.java     <span class="cm">// pass 3</span>
+├── SymbolTable.java          <span class="cm">// HashMap class → ClassInfo</span>
+├── ClassInfo.java            <span class="cm">// fields + methods</span>
+├── MethodInfo.java           <span class="cm">// return, params, locals</span>
+├── Parameter.java            <span class="cm">// (name, type)</span>
+├── ClassInfo_OffSet.java     <span class="cm">// memory layout per class</span>
+├── FieldInfo_Offset.java
+├── MethodInfo_Offset.java
+├── syntaxtree/               <span class="cm">// generated by JTB</span>
+├── visitor/                  <span class="cm">// generated by JTB</span>
+└── inputfiles/               <span class="cm">// MiniJava inputs</span></pre>
+  </div>
+
+  <div class="section">
+    <h2>👥 Ομάδα</h2>
+    <table>
+      <thead><tr><th>Ονοματεπώνυμο</th><th>Α.Μ.</th></tr></thead>
+      <tbody>
+        <tr><td>Παπαθανασίου Ελένη</td><td>1115202200135</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== PIPELINE ==================== -->
+<section class="page" id="pipeline">
+  <div class="comp-header tc">
+    <div class="icon">🔄</div>
+    <div>
+      <h1>Pipeline Analysis</h1>
+      <p>Πώς ρέουν τα δεδομένα μέσα από τα 3 passes</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Διάγραμμα Ροής</h2>
+    <div class="result-box">MiniJava source (.java)
+        │
+        ▼  [JTB + JavaCC]  →  parse tree
+        │
+        ▼  MyVisitor_ST      →  Symbol Table
+        │
+        ▼  MyVisitor_TC      →  Type checking
+        │
+        ▼  MyVisitor_OffSet  →  Field / Method offsets
+        │
+        ▼  print (offsets)</div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Main.java — Ο Driver</h2>
+    <ol class="step-list">
+      <li><strong>Έλεγχος arguments</strong><span>Αν <code>args.length < 1</code> → usage error.</span></li>
+      <li><strong>Άνοιγμα αρχείου</strong><span><code>FileInputStream</code> για κάθε input file.</span></li>
+      <li><strong>Parse</strong><span><code>MiniJavaParser parser = new MiniJavaParser(fis)</code> → <code>Goal root = parser.Goal()</code>.</span></li>
+      <li><strong>Pass 1: Symbol Table</strong><span><code>SymbolTable st = new SymbolTable(); MyVisitor_ST eval = new MyVisitor_ST(st); root.accept(eval, null);</code></span></li>
+      <li><strong>Pass 2: Type Checking</strong><span><code>MyVisitor_TC type_checking = new MyVisitor_TC(st); root.accept(type_checking, null);</code></span></li>
+      <li><strong>Pass 3: Offset Calculation</strong><span><code>MyVisitor_OffSet offset = new MyVisitor_OffSet(st); offset.calculate_print();</code></span></li>
+      <li><strong>Exception handling</strong><span><code>ParseException</code> και <code>FileNotFoundException</code> → stderr.</span></li>
+    </ol>
+
+    <pre><span class="kw">for</span> (String filename : args) {
+    System.out.println(<span class="str">"\nFilename: "</span> + filename);
+    FileInputStream fis = <span class="kw">new</span> <span class="type">FileInputStream</span>(args[<span class="num">0</span>]);
+    <span class="type">MiniJavaParser</span> parser = <span class="kw">new</span> <span class="type">MiniJavaParser</span>(fis);
+    
+    <span class="type">Goal</span> root = parser.<span class="fn">Goal</span>();
+    System.out.println(<span class="str">"Program parsed successfully."</span>);
+    
+    <span class="cm">// PASS 1: Symbol Table</span>
+    <span class="type">SymbolTable</span> st = <span class="kw">new</span> <span class="type">SymbolTable</span>();
+    <span class="type">MyVisitor_ST</span> eval = <span class="kw">new</span> <span class="type">MyVisitor_ST</span>(st);
+    root.<span class="fn">accept</span>(eval, <span class="kw">null</span>);
+    
+    <span class="cm">// PASS 2: Type checking</span>
+    <span class="type">MyVisitor_TC</span> tc = <span class="kw">new</span> <span class="type">MyVisitor_TC</span>(st);
+    root.<span class="fn">accept</span>(tc, <span class="kw">null</span>);
+    
+    <span class="cm">// PASS 3: Offset calculation</span>
+    <span class="type">MyVisitor_OffSet</span> offset = <span class="kw">new</span> <span class="type">MyVisitor_OffSet</span>(st);
+    offset.<span class="fn">calculate_print</span>();
+}</pre>
+  </div>
+
+  <div class="section">
+    <h2>🔧 Build & Run</h2>
+
+    <h3>Build (Makefile)</h3>
+    <pre><span class="fn">make all</span>
+<span class="cm"># equivalent to:</span>
+java -jar jtb132di.jar -te MiniJava.jj       <span class="cm"># generate AST + visitor</span>
+java -jar javacc5.jar MiniJava-jtb.jj       <span class="cm"># generate parser</span>
+javac syntaxtree/*.java visitor/*.java      <span class="cm"># compile generated</span>
+javac *.java                                <span class="cm"># compile hand-written</span></pre>
+
+    <h3>Run</h3>
+    <pre><span class="fn">make run</span>
+<span class="cm"># equivalent to:</span>
+java Main &lt;inputfiles&gt;
+
+<span class="cm"># Ή για ένα συγκεκριμένο αρχείο:</span>
+java Main path/to/File.java</pre>
+
+    <h3>Clean</h3>
+    <pre><span class="fn">make clean</span>
+<span class="cm"># removes .class, syntaxtree/, visitor/, MiniJava-jtb.jj</span>
+<span class="cm"># keeps only hand-written .java files</span></pre>
+  </div>
+
+  <div class="section">
+    <h2>📋 Prerequisites</h2>
+    <table>
+      <thead><tr><th>Jar</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>jtb132di.jar</code></td>
+          <td>Java Tree Builder — παράγει syntaxtree/ και visitor/</td>
+        </tr>
+        <tr>
+          <td><code>javacc5.jar</code></td>
+          <td>JavaCC — παράγει τον parser από το .jj</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert info">
+      <strong>Σημείωση:</strong> Τα δύο jars πρέπει να βρίσκονται στο root 
+      του project. Δεν χρειάζεται installation — τρέχουν απευθείας μέσω 
+      <code>java -jar</code>.
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SYMBOL TABLE ==================== -->
+<section class="page" id="st">
+  <div class="comp-header st">
+    <div class="icon">📋</div>
+    <div>
+      <h1>Pass 1 — Symbol Table</h1>
+      <p><code>MyVisitor_ST.java</code></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">1</span> Σκοπός</h2>
+    <p>
+      Ο <code>MyVisitor_ST</code> διατρέχει το AST και γεμίζει το 
+      <code>SymbolTable</code> με πληροφορίες για:
+    </p>
+    <ul style="color:var(--text-muted); margin-left:1.5rem;">
+      <li><strong>Classes</strong> — όνομα και προαιρετικά parent (<code>extends</code>)</li>
+      <li><strong>Fields</strong> — όνομα και τύπο (int, boolean, int[], boolean[], object)</li>
+      <li><strong>Methods</strong> — return type, parameters, local variables</li>
+      <li><strong>main</strong> — αντιμετωπίζεται ως method με ένα <code>String[]</code> parameter</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> Δομές Δεδομένων</h2>
+
+    <div class="struct-box">
+      <div class="struct-header st">SymbolTable</div>
+      <div class="struct-field">
+        <span class="field-name">st</span>
+        <span class="field-type">HashMap&lt;String, ClassInfo&gt;</span>
+        <span class="field-desc">class name → ClassInfo</span>
+      </div>
+    </div>
+
+    <div class="struct-box">
+      <div class="struct-header st">ClassInfo</div>
+      <div class="struct-field">
+        <span class="field-name">node</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">class name</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">parent</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">parent class (extends)</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">fields</span>
+        <span class="field-type">LinkedHashMap&lt;String, String&gt;</span>
+        <span class="field-desc">διατηρεί σειρά δήλωσης</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">methods</span>
+        <span class="field-type">LinkedHashMap&lt;String, MethodInfo&gt;</span>
+        <span class="field-desc">διατηρεί σειρά δήλωσης</span>
+      </div>
+    </div>
+
+    <div class="struct-box">
+      <div class="struct-header st">MethodInfo</div>
+      <div class="struct-field">
+        <span class="field-name">returnType</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">π.χ. "int", "void", class name</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">parameters</span>
+        <span class="field-type">List&lt;Parameter&gt;</span>
+        <span class="field-desc">λίστα (name, type)</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">localVars</span>
+        <span class="field-type">LinkedHashMap&lt;String, String&gt;</span>
+        <span class="field-desc">τοπικές μεταβλητές</span>
+      </div>
+    </div>
+
+    <div class="struct-box">
+      <div class="struct-header st">Parameter</div>
+      <div class="struct-field">
+        <span class="field-name">name</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">όνομα παραμέτρου</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">type</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">τύπος παραμέτρου</span>
+      </div>
+    </div>
+
+    <div class="alert info">
+      <strong>LinkedHashMap:</strong> Χρήση LinkedHashMap (όχι HashMap) για 
+      fields και methods — η <strong>σειρά δήλωσης</strong> είναι κρίσιμη για 
+      τον υπολογισμό offsets στο Pass 3.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> Visitor Methods</h2>
+
+    <table>
+      <thead><tr><th>AST Node</th><th>Ενέργεια</th></tr></thead>
+      <tbody>
+        <tr><td><code>Goal</code></td><td>Visits MainClass + όλα τα TypeDeclarations</td></tr>
+        <tr><td><code>MainClass</code></td><td>Δημιουργεί ClassInfo, προσθέτει τη <code>main</code> ως method</td></tr>
+        <tr><td><code>ClassDeclaration</code></td><td>ClassInfo με <code>parent = null</code></td></tr>
+        <tr><td><code>ClassExtendsDeclaration</code></td><td>ClassInfo με <code>parent = όνομα</code></td></tr>
+        <tr><td><code>VarDeclaration</code></td><td>Προσθέτει field ή local variable (ανάλογα με context)</td></tr>
+        <tr><td><code>MethodDeclaration</code></td><td>Δημιουργεί MethodInfo, parse parameters, local vars</td></tr>
+        <tr><td><code>FormalParameterList/Tail/Term</code></td><td>Συλλογή παραμέτρων σε string</td></tr>
+        <tr><td><code>Type</code></td><td>Επιστρέφει "int", "boolean", "int[]", "boolean[]"</td></tr>
+        <tr><td><code>Identifier</code></td><td>Επιστρέφει το όνομα</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> Παράδειγμα</h2>
+
+    <h3>Input</h3>
+    <pre><span class="kw">class</span> <span class="type">A</span> {
+    <span class="type">int</span> x;
+    <span class="type">boolean</span> y;
+    
+    <span class="kw">public</span> <span class="type">int</span> <span class="fn">foo</span>(<span class="type">int</span> a, <span class="type">boolean</span> b) {
+        <span class="type">int</span> result;
+        result = a + <span class="num">1</span>;
+        <span class="kw">return</span> result;
+    }
+}</pre>
+
+    <h3>SymbolTable μετά το Pass 1</h3>
+    <div class="result-box">Class A
+  Fields:
+    int x
+    boolean y
+  Methods:
+    int foo(int a, boolean b)  LocalVars: {result=int}</div>
+
+    <div class="alert success">
+      <strong>Πλήρης καταγραφή:</strong> Το SymbolTable περιέχει τώρα όλα τα 
+      απαραίτητα metadata για τα επόμενα δύο passes — type checking και 
+      offset calculation.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> Debugging</h2>
+    <p>Υπάρχει μέθοδος <code>printTable()</code> που εμφανίζει ολόκληρο το SymbolTable:</p>
+
+    <pre><span class="kw">public void</span> <span class="fn">printTable</span>() {
+    <span class="kw">for</span> (String className : st.<span class="fn">keySet</span>()) {
+        <span class="type">ClassInfo</span> ci = st.<span class="fn">get</span>(className);
+        System.out.println(<span class="str">"Class "</span> + className + 
+            (ci.parent != <span class="kw">null</span> ? <span class="str">" extends "</span> + ci.parent : <span class="str">""</span>));
+        <span class="cm">// ... εκτύπωση fields + methods</span>
+    }
+}</pre>
+
+    <p style="color:var(--text-muted);">
+      Είναι <strong>commented out</strong> στο <code>Main.java</code> αλλά 
+      μπορεί να ενεργοποιηθεί για debugging.
+    </p>
+  </div>
+</section>
+
+<!-- ==================== TYPE CHECKING ==================== -->
+<section class="page" id="tc">
+  <div class="comp-header tc">
+    <div class="icon">🔍</div>
+    <div>
+      <h1>Pass 2 — Type Checking</h1>
+      <p><code>MyVisitor_TC.java</code></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">1</span> Σκοπός</h2>
+    <p>
+      Ο <code>MyVisitor_TC</code> είναι ένας 
+      <code>GJDepthFirst&lt;String, Void&gt;</code> visitor: κάθε visit method 
+      <strong>επιστρέφει</strong> ένα String που είναι ο <em>τύπος</em>:
+    </p>
+    <ul style="color:var(--text-muted); margin-left:1.5rem;">
+      <li><strong>Primitives:</strong> <code>"int"</code>, <code>"boolean"</code></li>
+      <li><strong>Arrays:</strong> <code>"int[]"</code>, <code>"boolean[]"</code></li>
+      <li><strong>Objects:</strong> το όνομα της κλάσης</li>
+      <li><strong><code>null</code>:</strong> "no type produced"</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> Έλεγχοι που εκτελούνται</h2>
+
+    <table class="check-table">
+      <thead><tr><th>Node</th><th>Έλεγχος</th></tr></thead>
+      <tbody>
+        <tr><td>MainClass</td><td>Validates body + main method</td></tr>
+        <tr><td>ClassDeclaration / ClassExtendsDeclaration</td><td>Parent class exists, no redeclaration</td></tr>
+        <tr><td>VarDeclaration</td><td>Duplicate variable/parameter names</td></tr>
+        <tr><td>MethodDeclaration</td><td>Overriding rules, no overloads, duplicate parameters, return type</td></tr>
+        <tr><td>AssignmentStatement</td><td>Type of RHS compatible with LHS</td></tr>
+        <tr><td>ArrayAssignmentStatement</td><td>Left side is array, index is int</td></tr>
+        <tr><td>IfStatement / WhileStatement</td><td>Condition is boolean</td></tr>
+        <tr><td>PrintStatement</td><td>Argument is int</td></tr>
+        <tr><td>ArrayLookup</td><td>Indexed expr is array, index is int</td></tr>
+        <tr><td>NotExpression</td><td>Operand is boolean</td></tr>
+        <tr><td>Plus / Minus / Times</td><td>Operands are int</td></tr>
+        <tr><td>CompareExpression</td><td>Operands are int, result is boolean</td></tr>
+        <tr><td>AndExpression</td><td>Operands are boolean, result is boolean</td></tr>
+        <tr><td>ArrayLength</td><td>Argument is array</td></tr>
+        <tr><td>MessageSend</td><td>Method exists on receiver, arguments match</td></tr>
+        <tr><td>AllocationExpression</td><td>Cannot instantiate main class</td></tr>
+        <tr><td>ThisExpression</td><td>Only inside a class</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert danger">
+      <strong>Σφάλματα:</strong> Όλα τα type errors <strong>πετάγονται</strong> 
+      ως <code>Exception</code> με descriptive message. Το <code>Main</code> τα 
+      πιάνει και τα εκτυπώνει στο <code>stderr</code>.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> Helper Functions</h2>
+
+    <h3>get_type(expr, ci, mi)</h3>
+    <p>Αναλύει ένα variable name σε τύπο, ψάχνοντας με τη σειρά:</p>
+    <ol class="step-list">
+      <li><strong>Parameters</strong><span>Ψάχνει στη λίστα παραμέτρων της τρέχουσας μεθόδου.</span></li>
+      <li><strong>Local variables</strong><span>Ψάχνει στις τοπικές μεταβλητές.</span></li>
+      <li><strong>Own fields</strong><span>Ψάχνει στα πεδία της τρέχουσας κλάσης.</span></li>
+      <li><strong>Inherited fields</strong><span>Recursively ψάχνει στην parent class.</span></li>
+    </ol>
+
+    <h3>check_int_2 / check_boolean_1 / check_boolean_2</h3>
+    <p style="color:var(--text-muted);">
+      Ελέγχουν αν τα operands είναι σωστού τύπου (int ή boolean) για τις 
+      αντίστοιχες πράξεις.
+    </p>
+
+    <h3>in_methods(...)</h3>
+    <p style="color:var(--text-muted);">
+      Επιλύει method call σε συγκεκριμένη κλάση και επαληθεύει ότι τα 
+      ορίσματα ταιριάζουν με τις παραμέτρους.
+    </p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> Παραδείγματα Σφαλμάτων</h2>
+
+    <h3>Λάθος τύπος σε return</h3>
+    <pre><span class="kw">public</span> <span class="type">int</span> <span class="fn">foo</span>() {
+    <span class="kw">return</span> <span class="kw">true</span>;  <span class="cm">// expected int, got boolean</span>
+}</pre>
+    <div class="result-box" style="color:var(--danger);">Exception: Wrong expression type in return!!</div>
+
+    <h3>Λάθος τύπος σε condition</h3>
+    <pre><span class="kw">if</span> (<span class="num">5</span>) { ... }  <span class="cm">// expected boolean, got int</span></pre>
+    <div class="result-box" style="color:var(--danger);">Exception: Condition sould be boolean</div>
+
+    <h3>Λάθος τύπος σε operator</h3>
+    <pre><span class="type">int</span> x = <span class="num">3</span>;
+<span class="type">boolean</span> b = x && <span class="kw">true</span>;  <span class="cm">// x is int, not boolean</span></pre>
+    <div class="result-box" style="color:var(--danger);">Exception: Operator '&&' requires boolean operand</div>
+
+    <h3>Duplicate parameter</h3>
+    <pre><span class="kw">public</span> <span class="type">int</span> <span class="fn">foo</span>(<span class="type">int</span> a, <span class="type">int</span> a) { ... }</pre>
+    <div class="result-box" style="color:var(--danger);">Exception: Duplicate parameter: a</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> Allocation Restriction</h2>
+    <div class="alert warn">
+      <strong>Ειδικός κανόνας:</strong> Δεν επιτρέπεται η δημιουργία 
+      instance της κλάσης που περιέχει τη <code>main</code>:
+      <pre style="margin-top:0.5rem; background:transparent; border:none; padding:0;">
+<span class="kw">new</span> MainClass()  <span class="cm">// ✗ throw Exception</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== OFFSETS ==================== -->
+<section class="page" id="offset">
+  <div class="comp-header off">
+    <div class="icon">📍</div>
+    <div>
+      <h1>Pass 3 — Offset Calculation</h1>
+      <p><code>MyVisitor_OffSet.java</code></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">1</span> Σκοπός</h2>
+    <p>
+      Ο <code>MyVisitor_OffSet</code> υπολογίζει το <strong>memory layout</strong> 
+      κάθε user-defined κλάσης (η main class <strong>εξαιρείται</strong>). Για 
+      κάθε κλάση υπολογίζονται:
+    </p>
+    <ul style="color:var(--text-muted); margin-left:1.5rem;">
+      <li><strong>Field offsets</strong> — πού βρίσκεται κάθε πεδίο στη μνήμη</li>
+      <li><strong>Method offsets</strong> — πού βρίσκεται κάθε μέθοδος στον vtable</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> Κανόνες Υπολογισμού</h2>
+
+    <h3>Fields</h3>
+    <ol class="step-list">
+      <li><strong>Inherited fields first</strong><span>Τα πεδία της parent class μπαίνουν πρώτα.</span></li>
+      <li><strong>Next offset</strong><span>Το επόμενο offset ξεκινά από <code>parent.lastFieldOffset + size(parent.lastField)</code>.</span></li>
+      <li><strong>Type sizes</strong><span><code>int = 4</code>, <code>boolean = 1</code>, <code>arrays/objects = 8</code>.</span></li>
+    </ol>
+
+    <h3>Methods</h3>
+    <ol class="step-list">
+      <li><strong>Inherited methods</strong><span>Τα methods της parent class αντιγράφονται με το <strong>ίδιο</strong> offset.</span></li>
+      <li><strong>New methods</strong><span>Τα νέα (non-overriding) methods ξεκινούν από <code>parent.lastMethodOffset + 8</code>.</span></li>
+      <li><strong>Method size</strong><span>Κάθε method πιάνει <strong>8 bytes</strong>.</span></li>
+    </ol>
+
+    <div class="alert info">
+      <strong>Target machine:</strong> Οι κανόνες βασίζονται στο target machine 
+      του μαθήματος — <code>int = 4</code>, <code>boolean = 1</code>, 
+      <code>references = 8</code>, <code>methods = 8</code>.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> Δομές Δεδομένων</h2>
+
+    <div class="struct-box">
+      <div class="struct-header off">ClassInfo_OffSet</div>
+      <div class="struct-field">
+        <span class="field-name">name</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">class name</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">fields</span>
+        <span class="field-type">List&lt;FieldInfo_Offset&gt;</span>
+        <span class="field-desc">ταξινομημένα πεδία</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">methods</span>
+        <span class="field-type">List&lt;MethodInfo_Offset&gt;</span>
+        <span class="field-desc">ταξινομημένες μέθοδοι</span>
+      </div>
+    </div>
+
+    <div class="struct-box">
+      <div class="struct-header off">FieldInfo_Offset / MethodInfo_Offset</div>
+      <div class="struct-field">
+        <span class="field-name">name</span>
+        <span class="field-type">String</span>
+        <span class="field-desc">όνομα</span>
+      </div>
+      <div class="struct-field">
+        <span class="field-name">offset</span>
+        <span class="field-type">int</span>
+        <span class="field-desc">−1 = not yet computed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> Ροή Εκτέλεσης</h2>
+
+    <ol class="step-list">
+      <li><strong>calculate_print()</strong><span>Για κάθε class στο SymbolTable: δημιουργία ClassInfo_OffSet και προσθήκη fields.</span></li>
+      <li><strong>Προσθήκη methods</strong><span>Αν έχει parent: μόνο τα non-overriding. Αλλιώς: όλα.</span></li>
+      <li><strong>calculate(oi)</strong><span>Για κάθε ClassInfo_OffSet: υπολογισμός field offsets (με inheritance).</span></li>
+      <li><strong>Υπολογισμός method offsets</strong><span>Inherited methods διατηρούν το offset τους, νέα παίρνουν νέο.</span></li>
+      <li><strong>Εκτύπωση</strong><span>Skip κλάσεις που περιέχουν <code>main</code>, εκτύπωση των υπόλοιπων.</span></li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> Παράδειγμα — Memory Layout</h2>
+
+    <h3>Input Classes</h3>
+    <pre><span class="kw">class</span> <span class="type">A</span> {
+    <span class="type">int</span> x;
+    <span class="type">boolean</span> y;
+    
+    <span class="kw">public</span> <span class="type">int</span> <span class="fn">foo</span>() { ... }
+}
+
+<span class="kw">class</span> <span class="type">B</span> <span class="kw">extends</span> <span class="type">A</span> {
+    <span class="type">int</span>[] arr;
+    
+    <span class="kw">public</span> <span class="type">int</span> <span class="fn">bar</span>() { ... }
+}</pre>
+
+    <h3>Class A — Memory Layout</h3>
+    <div class="mem-layout">
+      <div class="mem-row header">
+        <span class="offset">Offset</span>
+        <span class="size">Size</span>
+        <span class="name">Name</span>
+        <span class="type">Type</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">0</span>
+        <span class="size">4 bytes</span>
+        <span class="name">A.x</span>
+        <span class="type">int</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">4</span>
+        <span class="size">1 byte</span>
+        <span class="name">A.y</span>
+        <span class="type">boolean</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">0</span>
+        <span class="size">8 bytes</span>
+        <span class="name">A.foo</span>
+        <span class="type">method</span>
+      </div>
+    </div>
+
+    <h3>Class B — Memory Layout (με inheritance)</h3>
+    <div class="mem-layout">
+      <div class="mem-row header">
+        <span class="offset">Offset</span>
+        <span class="size">Size</span>
+        <span class="name">Name</span>
+        <span class="type">Type</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">0</span>
+        <span class="size">4 bytes</span>
+        <span class="name">B.x</span>
+        <span class="type">int (inherited)</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">4</span>
+        <span class="size">1 byte</span>
+        <span class="name">B.y</span>
+        <span class="type">boolean (inherited)</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">5</span>
+        <span class="size">8 bytes</span>
+        <span class="name">B.arr</span>
+        <span class="type">int[] (new)</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">0</span>
+        <span class="size">8 bytes</span>
+        <span class="name">B.foo</span>
+        <span class="type">method (inherited)</span>
+      </div>
+      <div class="mem-row">
+        <span class="offset">8</span>
+        <span class="size">8 bytes</span>
+        <span class="name">B.bar</span>
+        <span class="type">method (new)</span>
+      </div>
+    </div>
+
+    <h3>Output</h3>
+    <div class="result-box">-------Class A-------
+-------Variables-------
+A.x : 0
+A.y : 4
+-------Methods-------
+A.foo : 0
+
+-------Class B-------
+-------Variables-------
+B.x : 0
+B.y : 4
+B.arr : 5
+-------Methods-------
+B.foo : 0
+B.bar : 8</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">6</span> Σημαντικές Παρατηρήσεις</h2>
+
+    <div class="alert success">
+      <strong>Inherited methods:</strong> Μια override μέθοδος διατηρεί 
+      το <strong>ίδιο offset</strong> με τη parent — έτσι λειτουργεί ο 
+      polymorphism μέσω vtable.
+    </div>
+
+    <div class="alert info">
+      <strong>Method size = 8:</strong> Ανεξάρτητα από το πλήθος 
+      παραμέτρων — αντιπροσωπεύει έναν <em>pointer</em> στον κώδικα της 
+      μεθόδου.
+    </div>
+
+    <div class="alert warn">
+      <strong>Skip main class:</strong> Η κλάση που περιέχει τη 
+      <code>main</code> <strong>δεν</strong> εκτυπώνεται — δεν έχει 
+      νόημα να υπολογιστούν offsets για αυτήν.
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LIMITATIONS ==================== -->
+<section class="page" id="limitations">
+  <div class="comp-header limit">
+    <div class="icon">⚠️</div>
+    <div>
+      <h1>Περιορισμοί</h1>
+      <p>Τι δεν έχει ολοκληρωθεί πλήρως σε σχέση με την εκφώνηση</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Συνολική Κάλυψη</h2>
+    <p>
+      Η παρούσα υλοποίηση αποτελεί <strong>μόνο το front-end</strong> ενός 
+      MiniJava compiler. Τα τρία πρώτα στάδια (symbol table, type checking, 
+      offset calculation) έχουν υλοποιηθεί πλήρως, αλλά το 
+      <strong>code generation</strong> λείπει εντελώς.
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="value" style="color:var(--success);">✓</span>
+        <span class="name">Symbol Table</span>
+      </div>
+      <div class="stat">
+        <span class="value" style="color:var(--success);">✓</span>
+        <span class="name">Type Checking</span>
+      </div>
+      <div class="stat">
+        <span class="value" style="color:var(--success);">✓</span>
+        <span class="name">Offsets</span>
+      </div>
+      <div class="stat">
+        <span class="value" style="color:var(--danger);">✗</span>
+        <span class="name">Code Generation</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🐛 Αποκλίσεις από το Spec</h2>
+
+    <div class="limitation">
+      <div class="icon-box">1</div>
+      <div class="content">
+        <strong>No code generation (Vapor / SPIGLET / bytecode)</strong>
+        <span>Υλοποιείται <strong>μόνο το front-end</strong> του compiler: symbol table, type checking, και offset computation. <strong>Δεν παράγεται intermediate representation ή τελικός κώδικας.</strong></span>
+      </div>
+    </div>
+
+    <div class="limitation">
+      <div class="icon-box">2</div>
+      <div class="content">
+        <strong>Type checker δεν κάνει exhaustive subtype checks</strong>
+        <span>Κάποια expressions ελέγχονται μόνο για τις <em>κοινές</em> περιπτώσεις (<code>int</code>, <code>boolean</code>, arrays, γνωστές κλάσεις). Δεν γίνεται πλήρης έλεγχος subtype compatibility σε κάθε θέση.</span>
+      </div>
+    </div>
+
+    <div class="limitation">
+      <div class="icon-box">3</div>
+      <div class="content">
+        <strong>Offset rules — hardcoded sizes</strong>
+        <span>Οι κανόνες offsets υποθέτουν <strong>συγκεκριμένα μεγέθη</strong> από τον target machine του μαθήματος: <code>int=4</code>, <code>boolean=1</code>, <code>references=8</code>, <code>methods=8</code>. Δεν είναι configurable.</span>
+      </div>
+    </div>
+
+    <div class="limitation warn">
+      <div class="icon-box">4</div>
+      <div class="content">
+        <strong>printTable() commented out</strong>
+        <span>Η μέθοδος <code>SymbolTable.printTable()</code> υπάρχει αλλά είναι <strong>commented out</strong> στο <code>Main.java</code>. Μπορεί να ενεργοποιηθεί για debugging αλλά δεν εκτελείται by default.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>✅ Τι Λειτουργεί Σωστά</h2>
+
+    <div class="grid">
+      <div class="card">
+        <h3>✓ Symbol Table</h3>
+        <p>Πλήρης καταγραφή classes, fields, methods, parameters, locals με 
+        LinkedHashMap για σειρά δήλωσης.</p>
+      </div>
+      <div class="card">
+        <h3>✓ Type Checking</h3>
+        <p>17+ έλεγχοι τύπων — expressions, statements, method calls, 
+        inheritance, allocation.</p>
+      </div>
+      <div class="card">
+        <h3>✓ Offset Calculation</h3>
+        <p>Σωστός υπολογισμός memory layout με inheritance — fields πρώτα, 
+        μετά methods.</p>
+      </div>
+      <div class="card">
+        <h3>✓ Visitor Pattern</h3>
+        <p>Τρία ανεξάρτητα passes χρησιμοποιούν το ίδιο AST — καθαρός 
+        διαχωρισμός concerns.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Τι Θα Έπρεπε να Υπάρχει (Spec)</h2>
+    <p>Σύμφωνα με την πλήρη εκφώνηση ενός MiniJava compiler, θα έλειπαν:</p>
+
+    <ol class="step-list">
+      <li><strong>Intermediate Representation (IR)</strong><span>Παραγωγή Vapor ή SPIGLET από το AST.</span></li>
+      <li><strong>Register Allocation</strong><span>Ανάθεση virtual → physical registers.</span></li>
+      <li><strong>Instruction Selection</strong><span>Μετάφραση IR σε assembly.</span></li>
+      <li><strong>Code Emission</strong><span>Παραγωγή τελικού MiniJava bytecode ή assembly.</span></li>
+      <li><strong>Constant Propagation / Folding</strong><span>Βελτιστοποιήσεις στο AST.</span></li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2>🔧 Προτεινόμενες Βελτιώσεις</h2>
+    <ol class="step-list">
+      <li><strong>Ενεργοποίηση printTable()</strong><span>Προαιρετικό flag <code>-debug</code> για εκτύπωση του symbol table.</span></li>
+      <li><strong>Exhaustive subtype checks</strong><span>Έλεγχος subtype compatibility σε κάθε expression position.</span></li>
+      <li><strong>Configurable sizes</strong><span>CLI flags για τα μεγέθη των τύπων (int=4, boolean=1, κ.λπ.).</span></li>
+      <li><strong>IR generation</strong><span>Προσθήκη 4ου pass για παραγωγή SPIGLET.</span></li>
+      <li><strong>Better error messages</strong><span>Line numbers + column numbers στα exceptions.</span></li>
+      <li><strong>Warning system</strong><span>Non-fatal warnings (unused variables, unreachable code).</span></li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2>📌 Συμπέρασμα</h2>
+    <p>
+      Ο analyzer υλοποιεί <strong>πλήρως</strong> τα τρία πρώτα στάδια ενός 
+      compiler front-end: symbol table construction, type checking, και 
+      memory layout computation. Χρησιμοποιεί καθαρή αρχιτεκτονική με 
+      <strong>τρεις ανεξάρτητους visitors</strong> που μοιράζονται το ίδιο AST.
+    </p>
+    <p style="color:var(--text-muted); margin-top:1rem;">
+      Οι περιορισμοί είναι <strong>καταγεγραμμένοι ρητά</strong> στο README 
+      (section 9). Η βασική έλλειψη είναι το <em>code generation</em> — το 
+      οποίο αποτελεί το δεύτερο μισό ενός πλήρους compiler και απαιτεί 
+      σημαντικά περισσότερη δουλειά (IR design, register allocation, 
+      instruction selection).
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Εργασία · Μεταγλωττιστές · ΕΚΠΑ<br>
+  <span style="opacity:0.6;">© 2025 — Παπαθανασίου Ελένη</span>
+</footer>
+
+<script>
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  
+  const target = document.getElementById(page);
+  if (target) target.classList.add('active');
+  
+  const link = document.querySelector(`.nav-links a[data-page="${page}"]`);
+  if (link) link.classList.add('active');
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  history.replaceState(null, '', '#' + page);
+}
+
+window.addEventListener('load', () => {
+  const hash = window.location.hash.slice(1) || 'home';
+  go(hash);
+});
+
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash.slice(1) || 'home';
+  go(hash);
+});
+</script>
+</body>
+</html>
