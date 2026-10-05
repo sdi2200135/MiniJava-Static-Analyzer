@@ -8,6 +8,10 @@ stage of a MiniJava compiler.
 The project is built around **JTB** (Java Tree Builder) and **JavaCC**, and
 uses the visitor pattern (`GJDepthFirst`) to walk the AST.
 
+🌐 **[View the interactive presentation](https://sdi2200135.github.io/MiniJava-Static-Analyzer/)**
+
+[![Website](https://img.shields.io/badge/Website-Live-brightgreen)](https://sdi2200135.github.io/MiniJava-Static-Analyzer/)
+
 ---
 
 ## 1. Overview
